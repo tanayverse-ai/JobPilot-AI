@@ -1,0 +1,6 @@
+This file was a duplicate of requirements.txt created by an accidental
+`pip freeze > reuirements.txt` (typo) and was saved as UTF-16, which is why it
+looked like garbage when opened as text. It is unused by the app and safe to
+delete — I can't delete files on your computer from here, so please remove
+`backend/reuirements.txt` yourself. Use `backend/requirements.txt` (correct
+spelling) as the real dependency list.
