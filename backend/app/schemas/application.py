@@ -93,3 +93,7 @@ class ApplicationsSummary(BaseModel):
     total_active: int
     stage_counts: ApplicationStageCounts
     recent: List[ApplicationPublic]
+
+
+class ReminderListResponse(BaseModel):
+    items: List[ApplicationPublic]

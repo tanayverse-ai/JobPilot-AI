@@ -3,7 +3,7 @@ applications_service.py whenever an application is created, has its status
 changed, or is archived -- never edited or deleted once written."""
 
 from datetime import datetime, timezone
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from bson import ObjectId
 from pymongo.database import Database
@@ -56,3 +56,11 @@ def list_events(db: Database, user_id: str, application_id: Union[str, ObjectId]
     )
     items = [_to_public(doc) for doc in cursor]
     return ApplicationEventListResponse(items=items)
+
+
+def list_events_since(db: Database, user_id: str, since: datetime) -> List[dict]:
+    """Raw event documents (not the public schema) across every application
+    for this user, for internal use by analytics_service's activity trend --
+    unlike list_events, this is not scoped to a single application."""
+    cursor = _collection(db).find({"user_id": ObjectId(user_id), "occurred_at": {"$gte": since}})
+    return list(cursor)

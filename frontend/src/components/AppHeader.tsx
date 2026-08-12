@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/applications", label: "Applications" },
   { to: "/materials", label: "Materials" },
+  { to: "/analytics", label: "Analytics" },
 ];
 
 export default function AppHeader() {

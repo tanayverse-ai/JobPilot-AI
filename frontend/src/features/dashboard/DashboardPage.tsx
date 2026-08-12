@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/apiClient";
 import { STATUS_LABELS, type ApplicationsSummary } from "@/types/application";
 import { getApplicationsSummary } from "@/features/applications/applicationsApi";
 
+import RemindersWidget from "./RemindersWidget";
 import StageFunnel from "./StageFunnel";
 
 const SUMMARY_CARDS: Array<{ key: keyof ApplicationsSummary["stage_counts"]; label: string }> = [
@@ -77,6 +78,8 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+
+            <RemindersWidget />
 
             <div className="mb-8">
               <StageFunnel stageCounts={summary.stage_counts} />

@@ -8,6 +8,7 @@ import ApplicationDetailPage from "@/features/applications/ApplicationDetailPage
 import ApplicationsPage from "@/features/applications/ApplicationsPage";
 import NewApplicationPage from "@/features/applications/NewApplicationPage";
 import MaterialsPage from "@/features/materials/MaterialsPage";
+import AnalyticsPage from "@/features/analytics/AnalyticsPage";
 
 import { AuthProvider } from "./AuthContext";
 
@@ -55,6 +56,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MaterialsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <AnalyticsPage />
               </ProtectedRoute>
             }
           />

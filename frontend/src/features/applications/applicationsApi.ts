@@ -6,6 +6,7 @@ import type {
   ApplicationPublic,
   ApplicationsSummary,
   ApplicationStatus,
+  ReminderListResponse,
   SortOption,
 } from "@/types/application";
 
@@ -63,4 +64,8 @@ export function archiveApplication(token: string, id: string): Promise<Applicati
 
 export function getApplicationEvents(token: string, id: string): Promise<ApplicationEventListResponse> {
   return apiRequest<ApplicationEventListResponse>(`/api/v1/applications/${id}/events`, { token });
+}
+
+export function getReminders(token: string, withinDays = 14): Promise<ReminderListResponse> {
+  return apiRequest<ReminderListResponse>(`/api/v1/applications/reminders?within_days=${withinDays}`, { token });
 }

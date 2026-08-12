@@ -111,6 +111,10 @@ export interface ApplicationEventListResponse {
   items: ApplicationEvent[];
 }
 
+export interface ReminderListResponse {
+  items: ApplicationPublic[];
+}
+
 export interface ApplicationFormValues {
   company_name: string;
   job_title: string;

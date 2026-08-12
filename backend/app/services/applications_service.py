@@ -10,7 +10,7 @@ final design.
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from bson import ObjectId
@@ -27,6 +27,7 @@ from app.schemas.application import (
     ApplicationStageCounts,
     ApplicationsSummary,
     ApplicationUpdate,
+    ReminderListResponse,
 )
 from app.services import application_events_service
 from app.utils.errors import AppError
@@ -44,6 +45,9 @@ SORT_OPTIONS = {
     "next_action_asc": ("next_action_at", 1),
 }
 DEFAULT_SORT = "updated_desc"
+
+REMINDER_HORIZON_DAYS = 14
+REMINDER_MAX_ITEMS = 20
 
 
 def _collection(db: Database):
@@ -211,6 +215,22 @@ def archive_application(db: Database, user_id: str, application_id: str) -> Appl
     application_events_service.record_event(db, user_id, object_id, ApplicationEventType.archived)
 
     return _to_public(doc)
+
+
+def get_reminders(db: Database, user_id: str, within_days: int = REMINDER_HORIZON_DAYS) -> ReminderListResponse:
+    """Active applications with a `next_action_at` that's already overdue or
+    falls within the next `within_days` days, earliest first. There's no
+    email/push infrastructure here -- this is a simple in-app "what needs my
+    attention" query, not a notification system."""
+    horizon = datetime.now(timezone.utc) + timedelta(days=within_days)
+    query = {
+        "user_id": ObjectId(user_id),
+        "archived_at": None,
+        "next_action_at": {"$exists": True, "$ne": None, "$lte": horizon},
+    }
+    cursor = _collection(db).find(query).sort("next_action_at", 1).limit(REMINDER_MAX_ITEMS)
+    items = [_to_public(doc) for doc in cursor]
+    return ReminderListResponse(items=items)
 
 
 def get_summary(db: Database, user_id: str) -> ApplicationsSummary:
