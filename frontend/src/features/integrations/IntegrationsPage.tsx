@@ -203,11 +203,18 @@ export default function IntegrationsPage() {
     setNotice(null);
     try {
       const result = await syncGmail(token);
+      const parts: string[] = [];
+      if (result.auto_added > 0) {
+        parts.push(`added ${result.auto_added} application${result.auto_added === 1 ? "" : "s"} automatically`);
+      }
+      if (result.new_detections > 0) {
+        parts.push(
+          `found ${result.new_detections} more that need${result.new_detections === 1 ? "s" : ""} your review`,
+        );
+      }
       setNotice(
-        result.new_detections > 0
-          ? `Scanned ${result.scanned} emails — found ${result.new_detections} new possible application${
-              result.new_detections === 1 ? "" : "s"
-            }.`
+        parts.length > 0
+          ? `Scanned ${result.scanned} emails — ${parts.join(", ")}.`
           : `Scanned ${result.scanned} emails — nothing new since last sync.`,
       );
       await loadAll();
@@ -257,8 +264,8 @@ export default function IntegrationsPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-slate-900">Smart Import</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Connect Gmail and JobPilot AI will scan for application-related emails and suggest applications to add —
-            you always review and confirm before anything is saved.
+            Connect Gmail and JobPilot AI will scan for application-related emails. Matches it's very confident about
+            get added to your tracker automatically — everything else lands below for a quick one-click review.
           </p>
         </div>
 

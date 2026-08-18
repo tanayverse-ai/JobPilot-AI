@@ -1,7 +1,9 @@
 """Smart Import orchestration: ties together the OAuth connection, Gmail
-fetch, and Gemini extraction services, and owns the review-queue workflow
-(nothing here ever writes to `job_applications` without an explicit
-confirm from the user).
+fetch, and Gemini extraction services, and owns the review-queue workflow.
+Most detections need an explicit confirm before they become a real
+`job_applications` document -- the one exception is a detection Gemini is
+very confident about (>= AUTO_ADD_CONFIDENCE), which is written straight to
+the tracker during sync. See AUTO_ADD_CONFIDENCE below for the tradeoff.
 """
 
 from datetime import datetime, timezone
@@ -25,6 +27,14 @@ from app.services import applications_service, gemini_service, gmail_service, go
 from app.utils.errors import AppError
 
 MIN_CONFIDENCE = 0.5
+
+# Detections at or above this confidence are added straight to the
+# tracker during sync -- no click needed. Everything between MIN_CONFIDENCE
+# and this stays in the review queue, since a wrong auto-add is worse than
+# asking once. Tune this up if auto-added entries turn out to be wrong in
+# practice, or down if the review queue feels like it's asking about
+# obvious matches too often.
+AUTO_ADD_CONFIDENCE = 0.85
 
 
 def _connections_collection(db: Database):
@@ -111,6 +121,7 @@ def run_sync(db: Database, user_id: str) -> SyncResultResponse:
 
     existing_keys = _existing_application_keys(db, user_id)
     new_detections = 0
+    auto_added = 0
 
     for result in extractions:
         source = by_id.get(result["message_id"])
@@ -131,6 +142,37 @@ def run_sync(db: Database, user_id: str) -> SyncResultResponse:
             continue
         key = (result["company_name"].strip().lower(), result["job_title"].strip().lower())
         if key in existing_keys:
+            continue
+
+        if result["confidence"] >= AUTO_ADD_CONFIDENCE:
+            # Confident enough to skip the review queue entirely -- add it
+            # to the real tracker now, and keep a record here purely as an
+            # audit trail (not something awaiting review).
+            applications_service.create_application(
+                db,
+                user_id,
+                ApplicationCreate(
+                    company_name=result["company_name"],
+                    job_title=result["job_title"],
+                    status=ApplicationStatus(result["detected_status"]),
+                ),
+            )
+            _detected_collection(db).insert_one(
+                {
+                    "user_id": ObjectId(user_id),
+                    "company_name": result["company_name"],
+                    "job_title": result["job_title"],
+                    "detected_status": result["detected_status"],
+                    "confidence": result["confidence"],
+                    "source_message_id": source["message_id"],
+                    "source_subject": source["subject"],
+                    "source_received_at": None,
+                    "review_status": DetectionStatus.auto_added.value,
+                    "created_at": datetime.now(timezone.utc),
+                }
+            )
+            existing_keys.add(key)
+            auto_added += 1
             continue
 
         _detected_collection(db).insert_one(
@@ -155,7 +197,7 @@ def run_sync(db: Database, user_id: str) -> SyncResultResponse:
     )
 
     return SyncResultResponse(
-        scanned=len(candidates), new_detections=new_detections, already_seen=len(seen_ids)
+        scanned=len(candidates), new_detections=new_detections, already_seen=len(seen_ids), auto_added=auto_added
     )
 
 

@@ -38,6 +38,7 @@ class SyncResultResponse(BaseModel):
     scanned: int
     new_detections: int
     already_seen: int
+    auto_added: int = 0
 
 
 class ConfirmDetectionRequest(BaseModel):

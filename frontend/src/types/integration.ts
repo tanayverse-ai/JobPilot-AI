@@ -32,6 +32,7 @@ export interface SyncResultResponse {
   scanned: number;
   new_detections: number;
   already_seen: number;
+  auto_added: number;
 }
 
 export interface ConfirmDetectionPayload {

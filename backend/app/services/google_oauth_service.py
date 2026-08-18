@@ -86,7 +86,15 @@ def resolve_state(db: Database, state: str) -> str:
     doc = _states_collection(db).find_one_and_delete({"state": state})
     if not doc:
         raise AppError("invalid_oauth_state", "This connection link has expired. Please try connecting again.", status_code=400)
-    if doc["expires_at"] < datetime.now(timezone.utc):
+    # PyMongo reads BSON datetimes back as timezone-naive (it always stores
+    # them as UTC but drops the tzinfo on the way out), even though we wrote
+    # this one as tz-aware -- comparing that directly against
+    # datetime.now(timezone.utc) raises TypeError. Treat a naive value as UTC
+    # (which is what it actually is) before comparing.
+    expires_at = doc["expires_at"]
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
         raise AppError("invalid_oauth_state", "This connection link has expired. Please try connecting again.", status_code=400)
     return doc["user_id"]
 

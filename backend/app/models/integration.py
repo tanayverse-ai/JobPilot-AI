@@ -4,10 +4,14 @@ tokens, a record of already-processed Gmail messages (so re-syncing doesn't
 reprocess the same email twice), and AI-detected applications awaiting the
 user's confirmation before they become real `job_applications` documents.
 
-Nothing here is auto-committed to the user's tracker without an explicit
-confirm -- the AI only ever *suggests*, per the product decision to keep a
-human in the loop rather than silently writing data the user didn't
-approve.
+Low- and medium-confidence detections always land in the review queue for
+an explicit confirm -- the AI only *suggests* those, per the product
+decision to keep a human in the loop rather than silently writing data the
+user didn't approve. The one exception is a detection Gemini is very
+confident about (>= AUTO_ADD_CONFIDENCE in integrations_service.py): that
+gets added to the tracker immediately, with a `detected_applications`
+record kept (review_status=auto_added) purely as an audit trail, not as
+something awaiting review.
 """
 
 from datetime import datetime, timezone
@@ -23,6 +27,7 @@ class DetectionStatus(str, Enum):
     pending = "pending"
     confirmed = "confirmed"
     rejected = "rejected"
+    auto_added = "auto_added"
 
 
 class GmailConnectionModel(BaseModel):
