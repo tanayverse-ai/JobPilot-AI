@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
-from app.routes import analytics, applications, auth, health, materials
+from app.routes import analytics, applications, auth, health, integrations, materials
 from app.utils.errors import AppError, app_error_handler, http_exception_handler, validation_exception_handler
 
 settings = get_settings()
@@ -32,6 +32,7 @@ app.include_router(auth.router)
 app.include_router(applications.router)
 app.include_router(materials.router)
 app.include_router(analytics.router)
+app.include_router(integrations.router)
 
 
 @app.get("/")

@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: "/applications", label: "Applications" },
   { to: "/materials", label: "Materials" },
   { to: "/analytics", label: "Analytics" },
+  { to: "/integrations", label: "Smart Import" },
 ];
 
 export default function AppHeader() {

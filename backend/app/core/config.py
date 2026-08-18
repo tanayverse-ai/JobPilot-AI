@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     cloudinary_api_key: str = ""
     cloudinary_api_secret: str = ""
 
+    # Smart Import (Gmail + Gemini) -- both free, no card required.
+    # Google Cloud Console: OAuth 2.0 Client ID (Web application), scope
+    # gmail.readonly. Google AI Studio: Gemini API key.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/api/v1/integrations/gmail/callback"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    # Where the OAuth popup's "connected" page redirects the user back to
+    # after Google's consent screen -- not used for auth, just UX.
+    frontend_url: str = "http://localhost:5173"
+
 
 @lru_cache
 def get_settings() -> Settings:

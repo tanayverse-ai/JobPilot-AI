@@ -9,6 +9,7 @@ import { STATUS_LABELS, type ApplicationsSummary } from "@/types/application";
 import { getApplicationsSummary } from "@/features/applications/applicationsApi";
 
 import RemindersWidget from "./RemindersWidget";
+import SmartImportBanner from "./SmartImportBanner";
 import StageFunnel from "./StageFunnel";
 
 const SUMMARY_CARDS: Array<{ key: keyof ApplicationsSummary["stage_counts"]; label: string }> = [
@@ -66,6 +67,8 @@ export default function DashboardPage() {
           <p className="text-sm text-slate-500">Loading…</p>
         ) : summary ? (
           <>
+            <SmartImportBanner />
+
             <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-5">
               <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-indigo-600">Active</p>
