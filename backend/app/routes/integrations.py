@@ -5,6 +5,8 @@ callback, which Google redirects the browser to directly and which
 identifies the user via the `state` parameter instead (see
 google_oauth_service.py's module docstring for why)."""
 
+import logging
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import HTMLResponse
 from pymongo.database import Database
@@ -22,6 +24,8 @@ from app.schemas.integration import (
     SyncResultResponse,
 )
 from app.services import google_oauth_service, integrations_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/integrations/gmail", tags=["integrations"])
 
@@ -51,6 +55,10 @@ def gmail_callback(code: str = Query(...), state: str = Query(...), db: Database
         integrations_service.handle_oauth_callback(db, code, state)
         message = "gmail-connected"
     except Exception:
+        # Surfaced to Render's logs (not to the user -- the popup only ever
+        # shows a generic message) so a failed connection is debuggable
+        # instead of silently disappearing.
+        logger.exception("Gmail OAuth callback failed")
         message = "gmail-connect-failed"
 
     return HTMLResponse(
